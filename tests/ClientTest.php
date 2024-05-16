@@ -13,8 +13,8 @@ namespace Fairway\CantoSaasApi\Tests;
 
 use Fairway\CantoSaasApi\Client;
 use Fairway\CantoSaasApi\ClientOptions;
-use GuzzleHttp\ClientInterface;
 use PHPUnit\Framework\TestCase;
+use Psr\Http\Client\ClientInterface;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 

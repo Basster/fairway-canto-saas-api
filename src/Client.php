@@ -15,10 +15,11 @@ use Fairway\CantoSaasApi\Endpoint\Asset;
 use Fairway\CantoSaasApi\Endpoint\Authorization\OAuth2;
 use Fairway\CantoSaasApi\Endpoint\LibraryTree;
 use Fairway\CantoSaasApi\Endpoint\Upload;
+use Fairway\CantoSaasApi\Exception\HttpClientException;
 use Fairway\CantoSaasApi\Helper\MdcUrlHelper;
 use Fairway\CantoSaasApi\Http\Authorization\OAuth2Request;
 use Fairway\CantoSaasApi\Http\Authorization\OAuth2Response;
-use GuzzleHttp\ClientInterface;
+use Psr\Http\Client\ClientInterface;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 
@@ -142,13 +143,17 @@ class Client
 
     protected function buildHttpClient(): ClientInterface
     {
-        return new \GuzzleHttp\Client([
-            'allow_redirects' => true,
-            'connect_timeout' => (int)$this->options->getHttpClientOptions()['timeout'],
-            'debug' => (bool)$this->options->getHttpClientOptions()['debug'],
-            'headers' => [
-                'userAgent' => $this->options->getHttpClientOptions()['userAgent'],
-            ],
-        ]);
+        if (class_exists('\GuzzleHttp\Client')) {
+            return new \GuzzleHttp\Client([
+                'allow_redirects' => true,
+                'connect_timeout' => (int)$this->options->getHttpClientOptions()['timeout'],
+                'debug' => (bool)$this->options->getHttpClientOptions()['debug'],
+                'headers' => [
+                    'userAgent' => $this->options->getHttpClientOptions()['userAgent'],
+                ],
+            ]);
+        }
+
+        throw HttpClientException::noDefaultHttpClient();
     }
 }

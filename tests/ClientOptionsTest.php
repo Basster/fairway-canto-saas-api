@@ -14,6 +14,7 @@ namespace Fairway\CantoSaasApi\Tests;
 use Fairway\CantoSaasApi\ClientOptions;
 use GuzzleHttp\Client;
 use PHPUnit\Framework\TestCase;
+use Psr\Http\Client\ClientInterface;
 use Psr\Log\NullLogger;
 
 class ClientOptionsTest extends TestCase
@@ -116,7 +117,7 @@ class ClientOptionsTest extends TestCase
             'appSecret' => 'not-empty',
             'httpClient' => new Client(),
         ]);
-        self::assertInstanceOf(Client::class, $options->getHttpClient());
+        self::assertInstanceOf(ClientInterface::class, $options->getHttpClient());
     }
 
     /**

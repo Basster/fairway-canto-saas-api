@@ -11,9 +11,9 @@ declare(strict_types=1);
 
 namespace Fairway\CantoSaasApi;
 
-use GuzzleHttp\ClientInterface;
 use InvalidArgumentException;
 use JetBrains\PhpStorm\ArrayShape;
+use Psr\Http\Client\ClientInterface;
 use Psr\Log\LoggerInterface;
 
 /**
