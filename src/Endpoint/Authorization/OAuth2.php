@@ -15,8 +15,8 @@ use Fairway\CantoSaasApi\Endpoint\AbstractEndpoint;
 use Fairway\CantoSaasApi\Http\Authorization\OAuth2Request;
 use Fairway\CantoSaasApi\Http\Authorization\OAuth2Response;
 use Fairway\CantoSaasApi\Http\RequestInterface;
-use GuzzleHttp\Psr7\Uri;
 use Psr\Http\Client\ClientExceptionInterface;
+use Psr\Http\Message\UriInterface;
 
 final class OAuth2 extends AbstractEndpoint
 {
@@ -42,7 +42,7 @@ final class OAuth2 extends AbstractEndpoint
         return new OAuth2Response($response);
     }
 
-    protected function buildRequestUrl(RequestInterface $request): Uri
+    protected function buildRequestUrl(RequestInterface $request): UriInterface
     {
         $url = sprintf(
             'https://oauth.%s/oauth/api/oauth2/%s',
@@ -55,6 +55,6 @@ final class OAuth2 extends AbstractEndpoint
             $url .= '?' . http_build_query($queryParams);
         }
 
-        return new Uri($url);
+        return $this->getClient()->createUri($url);
     }
 }
