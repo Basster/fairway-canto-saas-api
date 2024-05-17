@@ -26,7 +26,7 @@ use Psr\Http\Message\RequestInterface;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 
-class Client
+class Client implements RequestFactoryInterface
 {
     protected const API_VERSION = 'v1';
     protected const API_ROUTE = 'https://%s.%s/api';

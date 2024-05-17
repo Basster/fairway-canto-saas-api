@@ -35,6 +35,7 @@ class ClientTest extends TestCase
         ]);
         $client = new Client($options);
 
+        self::assertInstanceOf(RequestFactoryInterface::class, $client);
         self::assertInstanceOf(ClientInterface::class, $client->getHttpClient());
         self::assertInstanceOf(LoggerInterface::class, $client->getLogger());
         self::assertInstanceOf(RequestInterface::class, $client->createRequest('GET', 'https://example.com'));
