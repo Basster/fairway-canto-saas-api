@@ -56,8 +56,8 @@ abstract class AbstractEndpoint
         }
 
         try {
-            $response = $this->client->getHttpClient()->send($request, $options);
-        } catch (RuntimeException $e) {
+            $response = $this->client->getHttpClient()->sendRequest($request);
+        } catch (\Throwable $e) {
             /*
              * API seems to respond with 404 when no authentication token is given but needed.
              * When token is given but invalid, API responds with 401.

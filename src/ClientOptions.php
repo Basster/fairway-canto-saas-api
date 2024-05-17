@@ -14,6 +14,7 @@ namespace Fairway\CantoSaasApi;
 use InvalidArgumentException;
 use JetBrains\PhpStorm\ArrayShape;
 use Psr\Http\Client\ClientInterface;
+use Psr\Http\Message\RequestFactoryInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -36,6 +37,7 @@ class ClientOptions
             'timeout' => 'int',
             'userAgent' => 'string',
         ],
+        'httpRequestFactory' => RequestFactoryInterface::class,
         'logger' => LoggerInterface::class
     ];
 
@@ -58,6 +60,8 @@ class ClientOptions
     private ?ClientInterface $httpClient;
 
     private array $httpClientOptions;
+
+    private ?RequestFactoryInterface $httpRequestFactory;
 
     private ?LoggerInterface $logger;
 
@@ -83,6 +87,7 @@ class ClientOptions
             ],
             $options['httpClientOptions'] ?? []
         );
+        $this->httpRequestFactory = $options['httpRequestFactory'] ?? null;
         $this->logger = $options['logger'] ?? null;
         $this->mdcAwsAccountId = $options['mdcAwsAccountId'] ?? '';
         $this->mdcDomainName = $options['mdcDomainName'] ?? '';
@@ -122,6 +127,11 @@ class ClientOptions
     public function getHttpClientOptions(): array
     {
         return $this->httpClientOptions;
+    }
+
+    public function getHttpRequestFactory(): ?RequestFactoryInterface
+    {
+        return $this->httpRequestFactory;
     }
 
     public function getMdcDomainName(): string

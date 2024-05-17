@@ -11,10 +11,9 @@ declare(strict_types=1);
 
 namespace Fairway\CantoSaasApi\Http;
 
-use function json_decode;
 use JsonException;
-
 use Psr\Http\Message\ResponseInterface as PsrResponseInterface;
+use function json_decode;
 
 abstract class Response implements ResponseInterface
 {

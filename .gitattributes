@@ -4,4 +4,4 @@
 /.gitlab-ci.yml export-ignore
 /.php-cs-fixer.dist.php export-ignore
 /phpstan.neon export-ignore
-/Tests/ export-ignore
+/tests/ export-ignore

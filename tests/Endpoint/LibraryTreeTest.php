@@ -24,7 +24,6 @@ use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
-use Psr\Log\NullLogger;
 
 class LibraryTreeTest extends TestCase
 {
@@ -133,7 +132,7 @@ class LibraryTreeTest extends TestCase
     {
         $this->expectExceptionCode(1626717511);
 
-        $mockHandler = new MockHandler([new Response(401, [], '[]')]);
+        $mockHandler = new MockHandler([new RequestException('', new Request('GET', 'test'), new Response(401, [], '[]'))]);
         $clientMock = $this->buildClientMock($mockHandler);
         assert($clientMock instanceof Client);
 
@@ -150,7 +149,7 @@ class LibraryTreeTest extends TestCase
     {
         $this->expectExceptionCode(1627649307);
 
-        $mockHandler = new MockHandler([new Response(400, [], '[]')]);
+        $mockHandler = new MockHandler([new RequestException('', new Request('GET', 'test'), new Response(400, [], '[]'))]);
         $clientMock = $this->buildClientMock($mockHandler);
         assert($clientMock instanceof Client);
 
@@ -160,29 +159,19 @@ class LibraryTreeTest extends TestCase
         $libraryTreeEndpoint->getTree($treeRequest);
     }
 
-    protected function buildClientMock(MockHandler $mockHandler): MockObject
+    protected function buildClientMock(MockHandler $mockHandler): Client
     {
-        $optionsMock = $this->getMockBuilder(ClientOptions::class)
-            ->disableOriginalConstructor()
-            ->onlyMethods(['getCantoName', 'getCantoDomain'])
-            ->getMock();
-        $optionsMock->method('getCantoName')->willReturn('test');
-        $optionsMock->method('getCantoDomain')->willReturn('canto.com');
-
         $httpClient = new HttpClient([
             'handler' => HandlerStack::create($mockHandler),
         ]);
 
-        $clientMock = $this->getMockBuilder(Client::class)
-            ->disableOriginalConstructor()
-            ->onlyMethods(['getHttpClient', 'getLogger', 'getOptions', 'getAccessToken'])
-            ->getMock();
-        $clientMock->method('getHttpClient')->willReturn($httpClient);
-        $clientMock->method('getLogger')->willReturn(new NullLogger());
-        $clientMock->method('getOptions')->willReturn($optionsMock);
-        $clientMock->method('getAccessToken')->willReturn(null);
-
-        return $clientMock;
+        return new Client(new ClientOptions([
+            'cantoName' => 'test',
+            'cantoDomain' => 'canto.com',
+            'appId' => 'test',
+            'appSecret' => 'test',
+            'httpClient' => $httpClient,
+        ]));
     }
 
     protected function buildListFolderContentRequestMock(): MockObject

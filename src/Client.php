@@ -19,7 +19,10 @@ use Fairway\CantoSaasApi\Exception\HttpClientException;
 use Fairway\CantoSaasApi\Helper\MdcUrlHelper;
 use Fairway\CantoSaasApi\Http\Authorization\OAuth2Request;
 use Fairway\CantoSaasApi\Http\Authorization\OAuth2Response;
+use GuzzleHttp\Psr7\Request;
 use Psr\Http\Client\ClientInterface;
+use Psr\Http\Message\RequestFactoryInterface;
+use Psr\Http\Message\RequestInterface;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 
@@ -35,6 +38,8 @@ class Client
 
     protected ClientInterface $httpClient;
 
+    protected RequestFactoryInterface $requestFactory;
+
     protected ?string $accessToken = null;
 
     public function __construct(ClientOptions $options)
@@ -42,16 +47,7 @@ class Client
         $this->options = $options;
         $this->httpClient = $this->options->getHttpClient() ?? $this->buildHttpClient();
         $this->logger = $this->options->getLogger() ?? new NullLogger();
-    }
-
-    public function getOptions(): ClientOptions
-    {
-        return $this->options;
-    }
-
-    public function getLogger(): LoggerInterface
-    {
-        return $this->logger;
+        $this->requestFactory = $this->options->getHttpRequestFactory() ?? $this->buildRequestFactory();
     }
 
     public function getHttpClient(): ClientInterface
@@ -59,16 +55,39 @@ class Client
         return $this->httpClient;
     }
 
-    public function getAccessToken(): ?string
+    protected function buildHttpClient(): ClientInterface
     {
-        return $this->accessToken;
+        if (class_exists('\GuzzleHttp\Client')) {
+            return new \GuzzleHttp\Client([
+                'allow_redirects' => true,
+                'connect_timeout' => (int)$this->options->getHttpClientOptions()['timeout'],
+                'debug' => (bool)$this->options->getHttpClientOptions()['debug'],
+                'headers' => [
+                    'userAgent' => $this->options->getHttpClientOptions()['userAgent'],
+                ],
+            ]);
+        }
+
+        throw HttpClientException::noDefaultHttpClient();
     }
 
-    public function setAccessToken(string $accessToken): void
+    public function getLogger(): LoggerInterface
     {
-        if ($accessToken !== '') {
-            $this->accessToken = $accessToken;
+        return $this->logger;
+    }
+
+    protected function buildRequestFactory(): RequestFactoryInterface
+    {
+        if (class_exists('\GuzzleHttp\Psr7\Request')) {
+            return new class () implements RequestFactoryInterface {
+                public function createRequest(string $method, $uri): RequestInterface
+                {
+                    return new Request($method, $uri);
+                }
+            };
         }
+
+        throw HttpClientException::noDefaultHttpRequestFactory();
     }
 
     /**
@@ -90,6 +109,28 @@ class Client
         $this->setAccessToken($response->getAccessToken());
 
         return $response;
+    }
+
+    public function getAccessToken(): ?string
+    {
+        return $this->accessToken;
+    }
+
+    public function setAccessToken(string $accessToken): void
+    {
+        if ($accessToken !== '') {
+            $this->accessToken = $accessToken;
+        }
+    }
+
+    /**
+     * @param string $method
+     * @param \Psr\Http\Message\UriInterface|string $uri
+     * @return RequestInterface
+     */
+    public function createRequest(string $method, $uri): RequestInterface
+    {
+        return $this->requestFactory->createRequest($method, $uri);
     }
 
     public function asset(): Asset
@@ -127,6 +168,11 @@ class Client
         );
     }
 
+    public function getOptions(): ClientOptions
+    {
+        return $this->options;
+    }
+
     public function getMdcUrl(string $assetId = '', string $scheme = 'image'): string
     {
         $path = '';
@@ -139,21 +185,5 @@ class Client
             $this->options->getMdcAwsAccountId(),
             $path,
         );
-    }
-
-    protected function buildHttpClient(): ClientInterface
-    {
-        if (class_exists('\GuzzleHttp\Client')) {
-            return new \GuzzleHttp\Client([
-                'allow_redirects' => true,
-                'connect_timeout' => (int)$this->options->getHttpClientOptions()['timeout'],
-                'debug' => (bool)$this->options->getHttpClientOptions()['debug'],
-                'headers' => [
-                    'userAgent' => $this->options->getHttpClientOptions()['userAgent'],
-                ],
-            ]);
-        }
-
-        throw HttpClientException::noDefaultHttpClient();
     }
 }

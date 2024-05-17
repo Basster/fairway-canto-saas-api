@@ -35,7 +35,6 @@ use Fairway\CantoSaasApi\Http\Asset\SuccessResponse;
 use Fairway\CantoSaasApi\Http\EmptyResponse;
 use Fairway\CantoSaasApi\Http\InvalidResponseException;
 use Fairway\CantoSaasApi\Http\RequestInterface;
-use GuzzleHttp\Psr7\Request;
 use Psr\Http\Message\ResponseInterface;
 
 final class Asset extends AbstractEndpoint
@@ -96,7 +95,7 @@ final class Asset extends AbstractEndpoint
      */
     public function getAuthorizedUrlContent(string $uri, string $method = RequestInterface::GET): ResponseInterface
     {
-        $httpRequest = new Request($method, $uri);
+        $httpRequest = $this->getClient()->createRequest($method, $uri);
         return $this->getResponseWithHttpRequest($httpRequest);
     }
 

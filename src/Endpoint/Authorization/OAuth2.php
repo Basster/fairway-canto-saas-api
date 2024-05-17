@@ -16,7 +16,6 @@ use Fairway\CantoSaasApi\Http\Authorization\OAuth2Request;
 use Fairway\CantoSaasApi\Http\Authorization\OAuth2Response;
 use Fairway\CantoSaasApi\Http\RequestInterface;
 use GuzzleHttp\Exception\GuzzleException;
-use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Uri;
 
 final class OAuth2 extends AbstractEndpoint
@@ -28,7 +27,7 @@ final class OAuth2 extends AbstractEndpoint
     public function obtainAccessToken(OAuth2Request $request): OAuth2Response
     {
         $uri = $this->buildRequestUrl($request);
-        $httpRequest = new Request($request->getMethod(), $uri);
+        $httpRequest = $this->getClient()->createRequest($request->getMethod(), $uri);
 
         try {
             $response = $this->sendRequest($httpRequest);

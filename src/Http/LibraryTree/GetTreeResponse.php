@@ -31,8 +31,8 @@ class GetTreeResponse extends Response
         $responseData = $this->parseResponse($response);
 
         $this->results = $responseData['results'] ?? [];
-        $this->sortBy = $responseData['sortBy'];
-        $this->sortDirection = $responseData['sortDirection'];
+        $this->sortBy = $responseData['sortBy'] ?? '';
+        $this->sortDirection = $responseData['sortDirection'] ?? '';
     }
 
     public function getResults(): array

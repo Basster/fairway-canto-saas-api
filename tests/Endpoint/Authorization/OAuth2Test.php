@@ -23,7 +23,6 @@ use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
-use Psr\Log\NullLogger;
 
 class OAuth2Test extends TestCase
 {
@@ -76,29 +75,19 @@ class OAuth2Test extends TestCase
         $oAuth2->obtainAccessToken($oAuthRequest);
     }
 
-    protected function buildClientMock(MockHandler $mockHandler): MockObject
+    protected function buildClientMock(MockHandler $mockHandler): Client
     {
-        $optionsMock = $this->getMockBuilder(ClientOptions::class)
-            ->disableOriginalConstructor()
-            ->onlyMethods(['getCantoName', 'getCantoDomain'])
-            ->getMock();
-        $optionsMock->method('getCantoName')->willReturn('test');
-        $optionsMock->method('getCantoDomain')->willReturn('canto.com');
-
         $httpClient = new HttpClient([
             'handler' => HandlerStack::create($mockHandler),
         ]);
 
-        $clientMock = $this->getMockBuilder(Client::class)
-            ->disableOriginalConstructor()
-            ->onlyMethods(['getHttpClient', 'getLogger', 'getOptions', 'getAccessToken'])
-            ->getMock();
-        $clientMock->method('getHttpClient')->willReturn($httpClient);
-        $clientMock->method('getLogger')->willReturn(new NullLogger());
-        $clientMock->method('getOptions')->willReturn($optionsMock);
-        $clientMock->method('getAccessToken')->willReturn(null);
-
-        return $clientMock;
+        return new Client(new ClientOptions([
+            'cantoName' => 'test',
+            'cantoDomain' => 'canto.com',
+            'appId' => 'test',
+            'appSecret' => 'test',
+            'httpClient' => $httpClient,
+        ]));
     }
 
     protected function buildRequestMock(): MockObject
