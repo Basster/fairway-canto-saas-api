@@ -19,7 +19,6 @@ use Fairway\CantoSaasApi\Exception\HttpClientException;
 use Fairway\CantoSaasApi\Helper\MdcUrlHelper;
 use Fairway\CantoSaasApi\Http\Authorization\OAuth2Request;
 use Fairway\CantoSaasApi\Http\Authorization\OAuth2Response;
-use GuzzleHttp\Psr7\Request;
 use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\RequestFactoryInterface;
 use Psr\Http\Message\RequestInterface;
@@ -82,7 +81,7 @@ class Client implements RequestFactoryInterface
             return new class () implements RequestFactoryInterface {
                 public function createRequest(string $method, $uri): RequestInterface
                 {
-                    return new Request($method, $uri);
+                    return new \GuzzleHttp\Psr7\Request($method, $uri);
                 }
             };
         }
