@@ -15,8 +15,8 @@ use Fairway\CantoSaasApi\Endpoint\AbstractEndpoint;
 use Fairway\CantoSaasApi\Http\Authorization\OAuth2Request;
 use Fairway\CantoSaasApi\Http\Authorization\OAuth2Response;
 use Fairway\CantoSaasApi\Http\RequestInterface;
-use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\Psr7\Uri;
+use Psr\Http\Client\ClientExceptionInterface;
 
 final class OAuth2 extends AbstractEndpoint
 {
@@ -31,7 +31,7 @@ final class OAuth2 extends AbstractEndpoint
 
         try {
             $response = $this->sendRequest($httpRequest);
-        } catch (GuzzleException $e) {
+        } catch (ClientExceptionInterface $e) {
             throw new AuthorizationFailedException(
                 $e->getMessage(),
                 1626447895,

@@ -22,10 +22,14 @@ use Fairway\CantoSaasApi\Http\Authorization\OAuth2Response;
 use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\RequestFactoryInterface;
 use Psr\Http\Message\RequestInterface;
+use Psr\Http\Message\StreamFactoryInterface;
+use Psr\Http\Message\StreamInterface;
+use Psr\Http\Message\UriFactoryInterface;
+use Psr\Http\Message\UriInterface;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 
-class Client implements RequestFactoryInterface
+class Client implements RequestFactoryInterface, UriFactoryInterface, StreamFactoryInterface
 {
     protected const API_VERSION = 'v1';
     protected const API_ROUTE = 'https://%s.%s/api';
@@ -39,6 +43,10 @@ class Client implements RequestFactoryInterface
 
     protected RequestFactoryInterface $requestFactory;
 
+    protected UriFactoryInterface $uriFactory;
+
+    protected StreamFactoryInterface $streamFactory;
+
     protected ?string $accessToken = null;
 
     public function __construct(ClientOptions $options)
@@ -47,6 +55,8 @@ class Client implements RequestFactoryInterface
         $this->httpClient = $this->options->getHttpClient() ?? $this->buildHttpClient();
         $this->logger = $this->options->getLogger() ?? new NullLogger();
         $this->requestFactory = $this->options->getHttpRequestFactory() ?? $this->buildRequestFactory();
+        $this->uriFactory = $this->options->getUriFactory() ?? $this->buildUriFactory();
+        $this->streamFactory = $this->options->getStreamFactory() ?? $this->buildStreamFactory();
     }
 
     public function getHttpClient(): ClientInterface
@@ -54,46 +64,18 @@ class Client implements RequestFactoryInterface
         return $this->httpClient;
     }
 
-    protected function buildHttpClient(): ClientInterface
-    {
-        if (class_exists('\GuzzleHttp\Client')) {
-            return new \GuzzleHttp\Client([
-                'allow_redirects' => true,
-                'connect_timeout' => (int)$this->options->getHttpClientOptions()['timeout'],
-                'debug' => (bool)$this->options->getHttpClientOptions()['debug'],
-                'headers' => [
-                    'userAgent' => $this->options->getHttpClientOptions()['userAgent'],
-                ],
-            ]);
-        }
-
-        throw HttpClientException::noDefaultHttpClient();
-    }
-
     public function getLogger(): LoggerInterface
     {
         return $this->logger;
     }
 
-    protected function buildRequestFactory(): RequestFactoryInterface
-    {
-        if (class_exists('\GuzzleHttp\Psr7\Request')) {
-            return new class () implements RequestFactoryInterface {
-                public function createRequest(string $method, $uri): RequestInterface
-                {
-                    return new \GuzzleHttp\Psr7\Request($method, $uri);
-                }
-            };
-        }
-
-        throw HttpClientException::noDefaultHttpRequestFactory();
-    }
-
     /**
      * @throws Endpoint\Authorization\AuthorizationFailedException|Endpoint\Authorization\NotAuthorizedException
      */
-    public function authorizeWithClientCredentials(string $userId = '', string $scope = OAuth2Request::SCOPE_ADMIN): OAuth2Response
-    {
+    public function authorizeWithClientCredentials(
+        string $userId = '',
+        string $scope = OAuth2Request::SCOPE_ADMIN
+    ): OAuth2Response {
         $request = new OAuth2Request();
         $request->setAppId($this->options->getAppId())
             ->setAppSecret($this->options->getAppSecret())
@@ -124,7 +106,7 @@ class Client implements RequestFactoryInterface
 
     /**
      * @param string $method
-     * @param \Psr\Http\Message\UriInterface|string $uri
+     * @param UriInterface|string $uri
      * @return RequestInterface
      */
     public function createRequest(string $method, $uri): RequestInterface
@@ -184,5 +166,78 @@ class Client implements RequestFactoryInterface
             $this->options->getMdcAwsAccountId(),
             $path,
         );
+    }
+
+    public function createUri(string $uri = ''): UriInterface
+    {
+        return $this->uriFactory->createUri($uri);
+    }
+
+    public function createStream(string $content = ''): StreamInterface
+    {
+        return $this->streamFactory->createStream($content);
+    }
+
+    public function createStreamFromFile(string $filename, string $mode = 'r'): StreamInterface
+    {
+        return $this->streamFactory->createStreamFromFile($filename, $mode);
+    }
+
+    public function createStreamFromResource($resource): StreamInterface
+    {
+        return $this->streamFactory->createStreamFromResource($resource);
+    }
+
+    protected function buildHttpClient(): ClientInterface
+    {
+        if (class_exists('\GuzzleHttp\Client')) {
+            return new \GuzzleHttp\Client([
+                'allow_redirects' => true,
+                'connect_timeout' => (int)$this->options->getHttpClientOptions()['timeout'],
+                'debug' => (bool)$this->options->getHttpClientOptions()['debug'],
+                'headers' => [
+                    'userAgent' => $this->options->getHttpClientOptions()['userAgent'],
+                ],
+            ]);
+        }
+
+        throw HttpClientException::noDefaultHttpClient();
+    }
+
+    protected function buildRequestFactory(): RequestFactoryInterface
+    {
+        if (class_exists('\GuzzleHttp\Psr7\Request')) {
+            return new class () implements RequestFactoryInterface {
+                public function createRequest(string $method, $uri): RequestInterface
+                {
+                    return new \GuzzleHttp\Psr7\Request($method, $uri);
+                }
+            };
+        }
+
+        throw HttpClientException::noDefaultHttpRequestFactory();
+    }
+
+    protected function buildUriFactory(): UriFactoryInterface
+    {
+        if (class_exists('\GuzzleHttp\Psr7\Uri')) {
+            return new class () implements UriFactoryInterface {
+                public function createUri(string $uri = ''): UriInterface
+                {
+                    return new \GuzzleHttp\Psr7\Uri($uri);
+                }
+            };
+        }
+
+        throw HttpClientException::noDefaultUriFactory();
+    }
+
+    private function buildStreamFactory(): StreamFactoryInterface
+    {
+        if (class_exists('\GuzzleHttp\Psr7\HttpFactory')) {
+            return new \GuzzleHttp\Psr7\HttpFactory();
+        }
+
+        throw HttpClientException::noDefaultStreamFactory();
     }
 }

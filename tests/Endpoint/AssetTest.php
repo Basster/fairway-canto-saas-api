@@ -23,7 +23,6 @@ use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
-use Psr\Log\NullLogger;
 
 class AssetTest extends TestCase
 {
@@ -33,7 +32,7 @@ class AssetTest extends TestCase
     public function batchUpdatePropertiesSuccessfulObtainResponse(): void
     {
         $mockHandler = new MockHandler([new Response(200, [], 'success')]);
-        $clientMock = $this->buildClientMock($mockHandler);
+        $clientMock = $this->buildClient($mockHandler);
 
         assert($clientMock instanceof Client);
         $assetEndpoint = new Asset($clientMock);
@@ -58,7 +57,7 @@ class AssetTest extends TestCase
                 new Response(401)
             )
         ]);
-        $clientMock = $this->buildClientMock($mockHandler);
+        $clientMock = $this->buildClient($mockHandler);
         assert($clientMock instanceof Client);
 
         $assetEndpoint = new Asset($clientMock);
@@ -81,7 +80,7 @@ class AssetTest extends TestCase
                 new Response(400, [], 'success')
             )
         ]);
-        $clientMock = $this->buildClientMock($mockHandler);
+        $clientMock = $this->buildClient($mockHandler);
         assert($clientMock instanceof Client);
 
         $assetEndpoint = new Asset($clientMock);
@@ -90,29 +89,19 @@ class AssetTest extends TestCase
         $assetEndpoint->batchUpdateProperties($request);
     }
 
-    protected function buildClientMock(MockHandler $mockHandler): MockObject
+    protected function buildClient(MockHandler $mockHandler): Client
     {
-        $optionsMock = $this->getMockBuilder(ClientOptions::class)
-            ->disableOriginalConstructor()
-            ->onlyMethods(['getCantoName', 'getCantoDomain'])
-            ->getMock();
-        $optionsMock->method('getCantoName')->willReturn('test');
-        $optionsMock->method('getCantoDomain')->willReturn('canto.com');
-
         $httpClient = new HttpClient([
             'handler' => HandlerStack::create($mockHandler),
         ]);
 
-        $clientMock = $this->getMockBuilder(Client::class)
-            ->disableOriginalConstructor()
-            ->onlyMethods(['getHttpClient', 'getLogger', 'getOptions', 'getAccessToken'])
-            ->getMock();
-        $clientMock->method('getHttpClient')->willReturn($httpClient);
-        $clientMock->method('getLogger')->willReturn(new NullLogger());
-        $clientMock->method('getOptions')->willReturn($optionsMock);
-        $clientMock->method('getAccessToken')->willReturn(null);
-
-        return $clientMock;
+        return new Client(new ClientOptions([
+            'cantoName' => 'test',
+            'cantoDomain' => 'canto.com',
+            'appId' => 'test',
+            'appSecret' => 'test',
+            'httpClient' => $httpClient,
+        ]));
     }
 
     protected function buildRequestMock(): MockObject

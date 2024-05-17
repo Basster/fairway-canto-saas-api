@@ -14,15 +14,19 @@ namespace Fairway\CantoSaasApi\Tests;
 use Fairway\CantoSaasApi\Client;
 use Fairway\CantoSaasApi\ClientOptions;
 use GuzzleHttp\Psr7\Request;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\RequestFactoryInterface;
 use Psr\Http\Message\RequestInterface;
+use Psr\Http\Message\StreamFactoryInterface;
+use Psr\Http\Message\UriFactoryInterface;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 
 class ClientTest extends TestCase
 {
+    private const MOCK_METHODS = ['getHttpClient', 'getHttpClientOptions', 'getLogger', 'getHttpRequestFactory', 'getUriFactory', 'getStreamFactory'];
     /**
      * @test
      */
@@ -36,6 +40,8 @@ class ClientTest extends TestCase
         $client = new Client($options);
 
         self::assertInstanceOf(RequestFactoryInterface::class, $client);
+        self::assertInstanceOf(UriFactoryInterface::class, $client);
+        self::assertInstanceOf(StreamFactoryInterface::class, $client);
         self::assertInstanceOf(ClientInterface::class, $client->getHttpClient());
         self::assertInstanceOf(LoggerInterface::class, $client->getLogger());
         self::assertInstanceOf(RequestInterface::class, $client->createRequest('GET', 'https://example.com'));
@@ -46,13 +52,12 @@ class ClientTest extends TestCase
      */
     public function createObjectWithCustomHttpClient(): void
     {
-        $clientOptionsMock = $this->getMockBuilder(ClientOptions::class)
-            ->disableOriginalConstructor()
-            ->onlyMethods(['getHttpClient', 'getLogger', 'getHttpRequestFactory'])
-            ->getMock();
+        $clientOptionsMock = $this->createClientOptionsMock();
         $clientOptionsMock->method('getHttpClient')->willReturn(new \GuzzleHttp\Client());
         $clientOptionsMock->method('getLogger')->willReturn(null);
         $clientOptionsMock->method('getHttpRequestFactory')->willReturn(null);
+        $clientOptionsMock->method('getUriFactory')->willReturn(null);
+        $clientOptionsMock->method('getStreamFactory')->willReturn(null);
         $client = new Client($clientOptionsMock);
 
         self::assertInstanceOf(\GuzzleHttp\Client::class, $client->getHttpClient());
@@ -63,10 +68,7 @@ class ClientTest extends TestCase
      */
     public function createObjectWithCustomLogger(): void
     {
-        $clientOptionsMock = $this->getMockBuilder(ClientOptions::class)
-            ->disableOriginalConstructor()
-            ->onlyMethods(['getHttpClient', 'getHttpClientOptions', 'getLogger', 'getHttpRequestFactory'])
-            ->getMock();
+        $clientOptionsMock = $this->createClientOptionsMock();
         $clientOptionsMock->method('getHttpClient')->willReturn(null);
         $clientOptionsMock->method('getHttpClientOptions')->willReturn([
             'debug' => false,
@@ -75,6 +77,8 @@ class ClientTest extends TestCase
         ]);
         $clientOptionsMock->method('getLogger')->willReturn(new NullLogger());
         $clientOptionsMock->method('getHttpRequestFactory')->willReturn(null);
+        $clientOptionsMock->method('getUriFactory')->willReturn(null);
+        $clientOptionsMock->method('getStreamFactory')->willReturn(null);
         $client = new Client($clientOptionsMock);
 
         self::assertInstanceOf(NullLogger::class, $client->getLogger());
@@ -99,10 +103,7 @@ class ClientTest extends TestCase
                 return $this->request;
             }
         };
-        $clientOptionsMock = $this->getMockBuilder(ClientOptions::class)
-            ->disableOriginalConstructor()
-            ->onlyMethods(['getHttpClient', 'getHttpClientOptions', 'getLogger', 'getHttpRequestFactory'])
-            ->getMock();
+        $clientOptionsMock = $this->createClientOptionsMock();
         $clientOptionsMock->method('getHttpClient')->willReturn(null);
         $clientOptionsMock->method('getHttpClientOptions')->willReturn([
             'debug' => false,
@@ -111,10 +112,23 @@ class ClientTest extends TestCase
         ]);
         $clientOptionsMock->method('getLogger')->willReturn(null);
         $clientOptionsMock->method('getHttpRequestFactory')->willReturn($requestFactory);
+        $clientOptionsMock->method('getUriFactory')->willReturn(null);
+        $clientOptionsMock->method('getStreamFactory')->willReturn(null);
 
         $client = new Client($clientOptionsMock);
         $requestFromFactory = $client->createRequest('GET-IGNORE-ME', 'https://ignore-me.com');
 
         self::assertSame($requestFromFactory, $request);
+    }
+
+    /**
+     * @return MockObject&ClientOptions
+     */
+    private function createClientOptionsMock(): MockObject
+    {
+        return $this->getMockBuilder(ClientOptions::class)
+            ->disableOriginalConstructor()
+            ->onlyMethods(self::MOCK_METHODS)
+            ->getMock();
     }
 }

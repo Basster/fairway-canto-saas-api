@@ -12,10 +12,10 @@ declare(strict_types=1);
 namespace Fairway\CantoSaasApi\Http;
 
 use Fairway\CantoSaasApi\Client;
-use GuzzleHttp\Psr7\Request as HttpRequest;
-use GuzzleHttp\Psr7\Uri;
 use JsonException;
 use JsonSerializable;
+use Psr\Http\Message\RequestInterface as PsrRequestInterface;
+use Psr\Http\Message\UriInterface;
 
 abstract class Request implements RequestInterface, JsonSerializable
 {
@@ -55,7 +55,7 @@ abstract class Request implements RequestInterface, JsonSerializable
         }
     }
 
-    protected function buildRequestUrl(Client $client): Uri
+    protected function buildRequestUrl(Client $client): UriInterface
     {
         $url = $client->getApiUrl($this->getApiPath());
 
@@ -69,23 +69,27 @@ abstract class Request implements RequestInterface, JsonSerializable
             $url .= '?' . http_build_query($queryParams);
         }
 
-        return new Uri($url);
+        return $client->createUri($url);
     }
 
     /**
      * @throws InvalidRequestException
      */
-    public function toHttpRequest(Client $client, array $withHeaders = []): HttpRequest
+    public function toHttpRequest(Client $client, array $withHeaders = []): PsrRequestInterface
     {
         $uri = $this->buildRequestUrl($client);
         if ($this->hasBody()) {
             $withHeaders['Content-Type'] = 'application/json';
         }
-        return new HttpRequest(
-            $this->getMethod(),
-            $uri,
-            $withHeaders,
-            $this->hasBody() ? $this->getBody() : null,
-        );
+
+        $request = $client->createRequest($this->getMethod(), $uri);
+        foreach ($withHeaders as $header => $value) {
+            $request = $request->withHeader($header, $value);
+        }
+        if ($this->hasBody()) {
+            $request = $request->withBody($client->createStream($this->getBody()));
+        }
+
+        return $request;
     }
 }

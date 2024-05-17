@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace Fairway\CantoSaasApi\Http;
 
 use Fairway\CantoSaasApi\Client;
+use Psr\Http\Message\RequestInterface as PsrRequestInterface;
 
 interface RequestInterface
 {
@@ -45,7 +46,7 @@ interface RequestInterface
 
     /**
      * Transform Canto Request to Psr7-Request
-     * @return \Psr\Http\Message\RequestInterface
+     * @return PsrRequestInterface
      */
-    public function toHttpRequest(Client $client, array $withHeaders = []): \Psr\Http\Message\RequestInterface;
+    public function toHttpRequest(Client $client, array $withHeaders = []): PsrRequestInterface;
 }

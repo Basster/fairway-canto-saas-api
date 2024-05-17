@@ -42,7 +42,7 @@ class LibraryTreeTest extends TestCase
             '"matchExpr":"test"' .
             '}';
         $mockHandler = new MockHandler([new Response(200, [], $responseBody)]);
-        $clientMock = $this->buildClientMock($mockHandler);
+        $clientMock = $this->buildClient($mockHandler);
         assert($clientMock instanceof Client);
 
         $libraryTreeEndpoint = new LibraryTree($clientMock);
@@ -73,7 +73,7 @@ class LibraryTreeTest extends TestCase
                 new Response(401, [], '[]')
             )
         ]);
-        $clientMock = $this->buildClientMock($mockHandler);
+        $clientMock = $this->buildClient($mockHandler);
         assert($clientMock instanceof Client);
 
         $libraryTreeEndpoint = new LibraryTree($clientMock);
@@ -96,7 +96,7 @@ class LibraryTreeTest extends TestCase
                 new Response(400, [], '[]')
             )
         ]);
-        $clientMock = $this->buildClientMock($mockHandler);
+        $clientMock = $this->buildClient($mockHandler);
         assert($clientMock instanceof Client);
 
         $libraryTreeEndpoint = new LibraryTree($clientMock);
@@ -112,7 +112,7 @@ class LibraryTreeTest extends TestCase
     {
         $responseBody = '{"results":[{"id":"test"}],"sortBy":"time","sortDirection":"descending"}';
         $mockHandler = new MockHandler([new Response(200, [], $responseBody)]);
-        $clientMock = $this->buildClientMock($mockHandler);
+        $clientMock = $this->buildClient($mockHandler);
 
         assert($clientMock instanceof Client);
         $libraryTreeEndpoint = new LibraryTree($clientMock);
@@ -133,7 +133,7 @@ class LibraryTreeTest extends TestCase
         $this->expectExceptionCode(1626717511);
 
         $mockHandler = new MockHandler([new RequestException('', new Request('GET', 'test'), new Response(401, [], '[]'))]);
-        $clientMock = $this->buildClientMock($mockHandler);
+        $clientMock = $this->buildClient($mockHandler);
         assert($clientMock instanceof Client);
 
         $libraryTreeEndpoint = new LibraryTree($clientMock);
@@ -150,7 +150,7 @@ class LibraryTreeTest extends TestCase
         $this->expectExceptionCode(1627649307);
 
         $mockHandler = new MockHandler([new RequestException('', new Request('GET', 'test'), new Response(400, [], '[]'))]);
-        $clientMock = $this->buildClientMock($mockHandler);
+        $clientMock = $this->buildClient($mockHandler);
         assert($clientMock instanceof Client);
 
         $libraryTreeEndpoint = new LibraryTree($clientMock);
@@ -159,7 +159,7 @@ class LibraryTreeTest extends TestCase
         $libraryTreeEndpoint->getTree($treeRequest);
     }
 
-    protected function buildClientMock(MockHandler $mockHandler): Client
+    protected function buildClient(MockHandler $mockHandler): Client
     {
         $httpClient = new HttpClient([
             'handler' => HandlerStack::create($mockHandler),

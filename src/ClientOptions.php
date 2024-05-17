@@ -15,6 +15,8 @@ use InvalidArgumentException;
 use JetBrains\PhpStorm\ArrayShape;
 use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\RequestFactoryInterface;
+use Psr\Http\Message\StreamFactoryInterface;
+use Psr\Http\Message\UriFactoryInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -38,6 +40,8 @@ class ClientOptions
             'userAgent' => 'string',
         ],
         'httpRequestFactory' => RequestFactoryInterface::class,
+        'uriFactory' => UriFactoryInterface::class,
+        'streamFactory' => StreamFactoryInterface::class,
         'logger' => LoggerInterface::class
     ];
 
@@ -62,6 +66,10 @@ class ClientOptions
     private array $httpClientOptions;
 
     private ?RequestFactoryInterface $httpRequestFactory;
+
+    private ?UriFactoryInterface $uriFactory;
+
+    private ?StreamFactoryInterface $streamFactory;
 
     private ?LoggerInterface $logger;
 
@@ -88,6 +96,8 @@ class ClientOptions
             $options['httpClientOptions'] ?? []
         );
         $this->httpRequestFactory = $options['httpRequestFactory'] ?? null;
+        $this->uriFactory = $options['uriFactory'] ?? null;
+        $this->streamFactory = $options['streamFactory'] ?? null;
         $this->logger = $options['logger'] ?? null;
         $this->mdcAwsAccountId = $options['mdcAwsAccountId'] ?? '';
         $this->mdcDomainName = $options['mdcDomainName'] ?? '';
@@ -132,6 +142,16 @@ class ClientOptions
     public function getHttpRequestFactory(): ?RequestFactoryInterface
     {
         return $this->httpRequestFactory;
+    }
+
+    public function getUriFactory(): ?UriFactoryInterface
+    {
+        return $this->uriFactory;
+    }
+
+    public function getStreamFactory(): ?StreamFactoryInterface
+    {
+        return $this->streamFactory;
     }
 
     public function getMdcDomainName(): string

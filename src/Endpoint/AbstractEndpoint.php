@@ -16,10 +16,9 @@ use Fairway\CantoSaasApi\Endpoint\Authorization\NotAuthorizedException;
 use Fairway\CantoSaasApi\Http\InvalidResponseException;
 use Fairway\CantoSaasApi\Http\RequestInterface as CantoRequestInterface;
 use Fairway\CantoSaasApi\Http\UploadRequest;
-use GuzzleHttp\Exception\GuzzleException;
+use Psr\Http\Client\ClientExceptionInterface;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
-use RuntimeException;
 
 /**
  * @internal
@@ -40,7 +39,7 @@ abstract class AbstractEndpoint
 
     /**
      * @throws NotAuthorizedException
-     * @throws RuntimeException
+     * @throws ClientExceptionInterface
      */
     protected function sendRequest(RequestInterface $request, array $options = [], bool $withAccessToken = true): ResponseInterface
     {
@@ -57,7 +56,7 @@ abstract class AbstractEndpoint
 
         try {
             $response = $this->client->getHttpClient()->sendRequest($request);
-        } catch (\Throwable $e) {
+        } catch (ClientExceptionInterface $e) {
             /*
              * API seems to respond with 404 when no authentication token is given but needed.
              * When token is given but invalid, API responds with 401.
@@ -96,14 +95,14 @@ abstract class AbstractEndpoint
     }
 
     /**
-     * @throws InvalidResponseException
      * @throws NotAuthorizedException
+     * @throws InvalidResponseException
      */
     protected function getResponseWithHttpRequest(RequestInterface $request, array $options = [], bool $withAccessToken = true): ResponseInterface
     {
         try {
             return $this->sendRequest($request, $options, $withAccessToken);
-        } catch (GuzzleException $e) {
+        } catch (ClientExceptionInterface $e) {
             throw new InvalidResponseException(
                 sprintf(
                     'Invalid http status code received. Expected 200, got %s.',
