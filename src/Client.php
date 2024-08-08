@@ -137,14 +137,14 @@ class Client implements RequestFactoryInterface, UriFactoryInterface, StreamFact
     public function getApiUrl(string $path = null): string
     {
         $url = sprintf(
-            self::API_ROUTE,
+            static::API_ROUTE,
             $this->getOptions()->getCantoName(),
             $this->getOptions()->getCantoDomain(),
         );
         return sprintf(
             '%s/%s/%s',
             $url,
-            self::API_VERSION,
+            static::API_VERSION,
             $path ?? ''
         );
     }
@@ -161,7 +161,7 @@ class Client implements RequestFactoryInterface, UriFactoryInterface, StreamFact
             $path = sprintf('%s_%s/', $scheme, $assetId);
         }
         return sprintf(
-            self::MDC_ROUTE,
+            static::MDC_ROUTE,
             $this->options->getMdcDomainName(),
             $this->options->getMdcAwsAccountId(),
             $path,
