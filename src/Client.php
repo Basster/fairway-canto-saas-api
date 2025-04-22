@@ -134,7 +134,7 @@ class Client implements RequestFactoryInterface, UriFactoryInterface, StreamFact
         return new MdcUrlHelper($this);
     }
 
-    public function getApiUrl(string $path = null): string
+    public function getApiUrl(?string $path = null): string
     {
         $url = sprintf(
             static::API_ROUTE,
